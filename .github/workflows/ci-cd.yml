@@ -52,7 +52,7 @@ jobs:
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: "❌ Build Failed — ${{ github.repository }}@${{ github.ref_name }}"
-          to: "lycuttons@gmail.com, ${{ steps.committer.outputs.email }}"
+          to: "srengty@gmail.com, ${{ steps.committer.outputs.email }}"
           from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
           body: |
             Build FAILED for commit ${{ github.sha }} on branch ${{ github.ref_name }}.
