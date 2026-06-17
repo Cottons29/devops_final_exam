@@ -77,11 +77,17 @@ jobs:
           ansible-galaxy collection install community.docker
 
       - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Test SSH connection
+        run: ssh -o ConnectTimeout=10 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo SSH_OK"
 
       - name: Run Ansible Playbook
         env:
@@ -90,5 +96,4 @@ jobs:
           ansible-playbook ansible/playbook.yml \
             -i "${{ secrets.DEPLOY_HOST }}," \
             --user "${{ secrets.DEPLOY_USER }}" \
-            --private-key ~/.ssh/deploy_key \
             --extra-vars "ansible_user=${{ secrets.DEPLOY_USER }} project_dir=/home/${{ secrets.DEPLOY_USER }}/lypheng"
