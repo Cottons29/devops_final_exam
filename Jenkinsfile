@@ -14,7 +14,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git url: 'https://github.com/Cottons29/devops_final_exam.git',
+                    branch: 'main'
             }
         }
 
@@ -45,19 +46,35 @@ pipeline {
     post {
         failure {
             emailext(
-                subject: "BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: '''<p><strong>Build Failed</strong></p>
-                    <p>Job: ${JOB_NAME}<br/>
-                    Build Number: ${BUILD_NUMBER}<br/>
-                    Build URL: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-                    <p>Check the <a href="${BUILD_URL}console">console output</a> for details.</p>''',
-                to: 'lycuttons@gmail.com',
-                recipientProviders: [culprits()],
+                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: '''<h2 style="color:red;">Build Failed</h2>
+                    <table>
+                        <tr><td><b>Job:</b></td><td>${JOB_NAME}</td></tr>
+                        <tr><td><b>Build #:</b></td><td>${BUILD_NUMBER}</td></tr>
+                        <tr><td><b>Build URL:</b></td><td><a href="${BUILD_URL}">${BUILD_URL}</a></td></tr>
+                        <tr><td><b>Console:</b></td><td><a href="${BUILD_URL}console">View Logs</a></td></tr>
+                    </table>
+                    <p>Check the console output for details.</p>''',
+                to: 'srengty@gmail.com',
+                recipientProviders: [culprits(), developers()],
                 mimeType: 'text/html'
             )
         }
         success {
-            echo 'Build & Deploy successful!'
+            emailext(
+                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: '''<h2 style="color:green;">Build Successful</h2>
+                    <table>
+                        <tr><td><b>Job:</b></td><td>${JOB_NAME}</td></tr>
+                        <tr><td><b>Build #:</b></td><td>${BUILD_NUMBER}</td></tr>
+                        <tr><td><b>Build URL:</b></td><td><a href="${BUILD_URL}">${BUILD_URL}</a></td></tr>
+                        <tr><td><b>Console:</b></td><td><a href="${BUILD_URL}console">View Logs</a></td></tr>
+                    </table>
+                    <p>Deployment to web server completed successfully.</p>''',
+                to: 'lycuttons@gmail.com',
+                recipientProviders: [culprits(), developers()],
+                mimeType: 'text/html'
+            )
         }
     }
 }

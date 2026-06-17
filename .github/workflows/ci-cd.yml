@@ -1,0 +1,94 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "**" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can read the committer email
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Build
+        run: ./gradlew clean build -x test
+
+      - name: Test
+        run: ./gradlew test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/test-results/test/
+
+      # ── Email notification on failure ──────────────────────────
+      - name: Get committer email
+        if: failure()
+        id: committer
+        run: |
+          EMAIL=$(git log -1 --format='%ae' HEAD)
+          NAME=$(git log -1 --format='%an' HEAD)
+          echo "email=$EMAIL"  >> "$GITHUB_OUTPUT"
+          echo "name=$NAME"    >> "$GITHUB_OUTPUT"
+
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ Build Failed — ${{ github.repository }}@${{ github.ref_name }}"
+          to: "lycuttons@gmail.com, ${{ steps.committer.outputs.email }}"
+          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+          body: |
+            Build FAILED for commit ${{ github.sha }} on branch ${{ github.ref_name }}.
+
+            Committer : ${{ steps.committer.outputs.name }} <${{ steps.committer.outputs.email }}>
+            Commit msg: ${{ github.event.head_commit.message }}
+            Run URL   : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  # ── Deploy ─────────────────────────────────────────────────────
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+          ansible-galaxy collection install community.docker
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook ansible/playbook.yml \
+            -i "${{ secrets.DEPLOY_HOST }}," \
+            --user "${{ secrets.DEPLOY_USER }}" \
+            --private-key ~/.ssh/deploy_key \
+            --extra-vars "ansible_user=${{ secrets.DEPLOY_USER }} project_dir=/home/${{ secrets.DEPLOY_USER }}/lypheng"
