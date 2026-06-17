@@ -1,4 +1,4 @@
-package net.orderzone.idcard.model;
+package live.cottons.lypheng.model;
 
 /**
  * Linear barcode symbologies supported on the card.

@@ -1,4 +1,4 @@
-package net.orderzone.idcard.model;
+package live.cottons.lypheng.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

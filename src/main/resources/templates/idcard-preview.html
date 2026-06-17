@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>ID Card Preview</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f3f4f6;
+            margin: 0;
+        }
+        .id-card {
+            width: 340px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            background: #fff;
+        }
+        .id-card .header {
+            padding: 16px 20px;
+            text-align: center;
+            color: white;
+        }
+        .id-card .header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .id-card .header .tagline {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+        .id-card .body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 12px;
+        }
+        .id-card .photo {
+            width: 100px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #1d4ed8;
+        }
+        .id-card .info {
+            text-align: center;
+        }
+        .id-card .info .name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .id-card .info .type {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .id-card .info .detail {
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        .id-card .footer {
+            padding: 8px 20px;
+            text-align: center;
+            font-size: 10px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="id-card" th:with="tpl=${profile.template}">
+        <!-- Header -->
+        <div class="header"
+             th:style="'background:' + (${tpl} ? ${tpl.primaryColor} : '#1d4ed8')">
+            <h2 th:text="${tpl} ? ${tpl.organizationName} : 'Organization'">Organization</h2>
+            <div class="tagline" th:if="${tpl} and ${tpl.tagline}"
+                 th:text="${tpl.tagline}"></div>
+        </div>
+
+        <!-- Body -->
+        <div class="body">
+            <img class="photo"
+                 th:if="${profile.photoFileName}"
+                 th:src="@{/api/profiles/{id}/photo(id=${profile.id})}"
+                 alt="Photo"/>
+            <img class="photo"
+                 th:unless="${profile.photoFileName}"
+                 src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlNWU3ZWIiLz48dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5Y2EzYWYiIGZvbnQtc2l6ZT0iMTQiPk5vIFBob3RvPC90ZXh0Pjwvc3ZnPg=="
+                 alt="No Photo"/>
+
+            <div class="info">
+                <div class="name" th:text="${profile.fullName}">Full Name</div>
+                <div class="type" th:text="${profile.type}">STUDENT</div>
+                <div class="detail">
+                    Reg: <strong th:text="${profile.registrationNumber}">2026-ENG-001</strong>
+                </div>
+                <div class="detail" th:if="${profile.department}"
+                     th:text="'Dept: ' + ${profile.department}">Dept</div>
+                <div class="detail" th:if="${profile.title}"
+                     th:text="${profile.title}">Title</div>
+                <div class="detail" th:if="${profile.email}"
+                     th:text="${profile.email}">Email</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer"
+             th:style="'background:' + (${tpl} ? ${tpl.primaryColor} : '#1d4ed8')">
+            <span th:text="'ID: ' + ${profile.uuid}">ID</span> |
+            <span th:text="'Issued: ' + ${profile.issueDate}">Issued</span> |
+            <span th:text="'Expires: ' + ${profile.expiryDate}">Expires</span>
+        </div>
+    </div>
+</body>
+</html>
