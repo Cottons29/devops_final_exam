@@ -1,0 +1,10 @@
+.git
+.gitignore
+.gradle
+.idea
+.vscode
+bin
+build
+test-uploads
+*.pdf
+*.md
