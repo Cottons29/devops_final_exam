@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Long> {
 
-    Optional<Template> findByCode(String code);
-
     boolean existsByCode(String code);
+
+    Optional<Template> findByCode(String code);
 
     List<Template> findByNameContainingIgnoreCase(String query);
 }

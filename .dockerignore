@@ -8,3 +8,5 @@ build
 test-uploads
 *.pdf
 *.md
+backup.sql
+ansible
